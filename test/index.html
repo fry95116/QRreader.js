@@ -1,70 +1,142 @@
 <head>
-  <title>QR reader Demo</title>
-  <meta name="viewport" content="width=device-width, user-scalable=no" />
+    <title>QR reader Demo</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
 
-  <link rel="manifest" href="manifest.json" />
-  <link rel="stylesheet" type="text/css" href="main.css">
-  <!-- 截至ios11.3，暂时不支持manifest.icons -->
-  <link rel="apple-touch-icon" href="./e.png" type="image/png"/>
-  <link rel="icon" href="./e.png" type="image/png" />
+    <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" type="text/css" href="main.css">
+    <!-- 截至ios11.3，暂时不支持manifest.icons -->
+    <link rel="apple-touch-icon" href="./e.png" type="image/png" />
+    <link rel="icon" href="./e.png" type="image/png" />
+    <style>
+        #mask{
+            position: fixed;
+            left: 0px;
+            top: 0px;
+            width: 100%;
+            height: 100%;
+            background-color: black;
+        }
+        #mask video{
+            transform: translateX(-50%) translateY(-50%);
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            position: absolute;
+        }
+    </style>
 </head>
 
 <body>
-  <div class="revision">Revision 8</div>
-  <img src="pwa-fonts.png">
-  <div class="main-text">
+    <div class="revision">Revision 8</div>
+    <img src="pwa-fonts.png">
+    <div class="main-text">
 
-  </div>
-  <div>
-    <input type="file" accept="image/*" multiple>
-  </div>
-  <div class="network-message">
-    Network:
-    <span id="network-status" class="">Good</span>
-  </div>
-  <div id="mask">
-    <canvas>
+    </div>
+    <div>
+        <label class="btn-scanner" for="qrcode-capture"></label>
+        <input id="qrcode-capture" type="file" accept="image/*" multiple>
+    </div>
+    <div class="network-message">
+        Network:
+        <span id="network-status" class="">Good</span>
+    </div>
+    <div id="mask">
+        <video autoplay></video>
+    </div>
+    <script src="../src/QRreader.js"></script>
+    <script type="text/javascript">
+        if (navigator.serviceWorker != null) {
+            navigator.serviceWorker.register('sw.js')
+                .then(function (registration) {
+                    console.log('Registered events at scope: ', registration.scope);
+                });
+        }
 
-    </canvas>
-  </div>
-  <script src="../src/QRreader.js"></script>
-  <script type="text/javascript">
-    if (navigator.serviceWorker != null) {
-      navigator.serviceWorker.register('sw.js')
-        .then(function (registration) {
-          console.log('Registered events at scope: ', registration.scope);
-        });
-    }
+        var statusEl = document.querySelector('#network-status')
+        if (!navigator.onLine) {
+            statusEl.classList = ['is-offline']
+            statusEl.innerText = 'Offline'
+        }
 
-    var statusEl = document.querySelector('#network-status')
-    if (!navigator.onLine) {
-      statusEl.classList = ['is-offline']
-      statusEl.innerText = 'Offline'
-    }
+        var msg = document.querySelector('.main-text')
 
-    var msg = document.querySelector('.main-text')
-
-    // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
-    var d = 'navigator : ' + typeof navigator + '<br>'; 
-      d += 'MediaDevices:' + typeof MediaDevices + '<br>';
-      d += 'navigator.mediaDevices : ' + typeof navigator.mediaDevices + '<br>'; 
-    // try alternates
-      d += 'navigator.getUserMedia  : ' + typeof navigator.getUserMedia + '<br>';
-      d += 'navigator.webkitGetUserMedia  : ' + typeof navigator.webkitGetUserMedia + '<br>';
-    msg.innerHTML += d;
+        // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
+        var d = 'navigator : ' + typeof navigator + '<br>';
+        d += 'MediaDevices:' + typeof MediaDevices + '<br>';
+        d += 'navigator.mediaDevices : ' + typeof navigator.mediaDevices + '<br>';
+        // try alternates
+        d += 'navigator.getUserMedia  : ' + typeof navigator.getUserMedia + '<br>';
+        d += 'navigator.webkitGetUserMedia  : ' + typeof navigator.webkitGetUserMedia + '<br>';
+        msg.innerHTML += d;
 
 
-    mediaDevices = getMediaDevices()
-    if(mediaDevices == null){
-      alert('mediaDevices not supported!')
-    }
-    else{
-      mediaDevices.enumerateDevices()
-      .then(function(devices) {
-        devices.forEach(function(device) {
-          msg.innerHTML += device.kind + ': ' + device.label + ' id = ' + device.deviceId + '<br>';
-        });
-      })
-    }
-  </script>
+        var mediaDevices = getMediaDevices()
+        if (mediaDevices == null) {
+            alert('mediaDevices not supported!')
+        }
+        else {
+            mediaDevices.enumerateDevices()
+                .then(function (devices) {
+                    devices.forEach(function (device) {
+                        msg.innerHTML += device.kind + ': ' + device.label + ' id = ' + device.deviceId + '<br>';
+                    });
+                    cameras = getCameras(devices)
+                    screen = document.querySelector('#mask video')
+
+                    if (cameras.length >= 1) {
+                        var constraints = {
+                            video: {
+                                mandatory: {
+                                    sourceId: cameras[0].deviceId ? cameras[0].deviceId : null
+                                }
+                            },
+                            audio: false
+                        };
+
+                        navigator.mediaDevices.getUserMedia(constraints)
+                            .then(function (stream) {
+                                screen.srcObject = stream;
+                            })
+                            .catch(function(err) {
+                                console.log("Error occurred ", err);
+                            });
+                    }
+                })
+
+        }
+
+        function getCameras(devices){
+            res = []
+            for(idx in devices){
+                device = devices[idx]
+                if(device.kind === 'videoinput'){
+                    res.push(device)
+                }
+            }
+            return res
+        }
+        // function getCameras(mediaDevices) {
+        //     return new Promise(function (resolve, reject) {
+        //         if(!mediaDevices.enumerateDevices){
+        //             reject(new Error('enumerateDevices() not supported.'))
+        //         }
+        //         else{
+        //             mediaDevices.enumerateDevices()
+        //                 .then(function (devices) {
+        //                     var res = []
+        //                     devices.forEach(function (device) {
+        //                         // device.kind可能的值：'videoinput', 'audioinput'
+        //                         if (device.kind == 'videoinput')
+        //                             res.append(device)
+        //                     });
+        //                     resolve(res)
+        //                 })
+        //                 .catch(reject)
+        //         }
+        //     })
+        // }
+    </script>
 </body>

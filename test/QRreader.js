@@ -11,13 +11,10 @@
   }
 
   /** 获取MediaDevices接口，如果不支持则返回null */
-  function getMediaDevice() {
+  function getMediaDevices() {
     var res = null
-    if (isNotNil(MediaDevices) && isMeidaDevices(MediaDevices)) {
-      res = MediaDevices
-    }
-  
-    else if (isNotNil(navigator)) {
+
+    if (isNotNil(navigator)) {
       if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
         res = navigator.mediaDevices
       }
@@ -30,6 +27,11 @@
         res = navigator
       }
     }
+    
+    else if (isNotNil(MediaDevices) && isMediaDevices(MediaDevices)) {
+      res = MediaDevices
+    }
+  
     return res
   }
   
@@ -41,4 +43,7 @@
   function showFrame(){
     
   }
+
+  window.isMediaDevicesSupported = isMediaDevicesSupported
+  window.getMediaDevices = getMediaDevices
 })()
