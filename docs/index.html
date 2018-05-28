@@ -152,7 +152,7 @@
 
                 var constraints = {
                     video: {
-                        deviceId: cameras[idx].deviceId
+                        facingMode: { exact: "environment" } 
                     },
                     audio: false
                 };
@@ -170,7 +170,11 @@
         }
 
         function switchDevice(){
-            alert(JSON.stringify(mediaDevices.getSupportedConstraints()))
+            // alert('test')
+            // supportConstraints = navigator.mediaDevices.getSupportedConstraints()
+            // for (k in supportConstraints){
+            //     alert(k)
+            // }
             var idx = window.idx_cur
             var cameras = window.cameras
             var screen = window.screen
