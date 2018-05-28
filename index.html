@@ -1,0 +1,17 @@
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Web QR</title>
+</head>
+
+<body>
+    <div id="msg"></div>
+</body>
+<script type="text/javascript">
+var str1 = typeof MediaDevices
+var str2 = typeof navigator.mediaDevices
+
+document.getElementById("msg").innerHTML = str1 + '<br>' + str2
+</script>
+</html>
