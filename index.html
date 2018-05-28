@@ -1,19 +1,45 @@
-<html>
+
 <head>
-  <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+  <title>Minimal PWA</title>
   <meta name="viewport" content="width=device-width, user-scalable=no" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" type="text/css" href="main.css">
   <link rel="icon" href="/e.png" type="image/png" />
-    <title>Web QR</title>
 </head>
 
 <body>
-    <div id="msg"></div>
-</body>
-<script type="text/javascript">
-var str1 = typeof MediaDevices
-var str2 = typeof navigator.mediaDevices
+  <div class="revision">Revision 8</div>
+  <img src="pwa-fonts.png">
+  <div class="main-text">
+    Minimal PWA, open Console for more!
+  </div>
+  <div class="network-message">
+    Network:
+    <span id="network-status" class="">Good</span>
+  </div>
+  <script type="text/javascript">
+    if (navigator.serviceWorker != null) {
+      navigator.serviceWorker.register('sw.js')
+      .then(function(registration) {
+        console.log('Registered events at scope: ', registration.scope);
+      });
+    }
 
-document.getElementById("msg").innerHTML = str1 + '<br>' + str2
-</script>
-</html>
+    fetch('./data.json')
+
+    var statusEl = document.querySelector('#network-status')
+    if (!navigator.onLine) {
+      statusEl.classList = ['is-offline']
+      statusEl.innerText = 'Offline'
+    }
+
+    var msg = document.querySelector('.main-text')
+    
+    var str1 = typeof MediaDevices
+    var str2 = typeof navigator.mediaDevices
+
+    msg.innerHTML = str1 + '<br>' + str2
+
+
+  </script>
+</body>
