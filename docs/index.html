@@ -8,23 +8,57 @@
     <link rel="apple-touch-icon" href="./e.png" type="image/png" />
     <link rel="icon" href="./e.png" type="image/png" />
     <style>
-        #mask{
+        .absolute-center{
+            position: absolute;
+            transform: translateX(-50%) translateY(-50%);
+            top: 50%;
+            left: 50%;
+        }
+
+        .QRreader-mask{
             position: fixed;
             left: 0px;
             top: 0px;
             width: 100%;
             height: 100%;
             background-color: black;
+            overflow: hidden;
         }
-        #mask video{
-            transform: translateX(-50%) translateY(-50%);
-            top: 50%;
-            left: 50%;
+        
+        .QRreader-mask video{
             min-width: 100%;
             min-height: 100%;
             width: auto;
             height: auto;
             position: absolute;
+        }
+
+        .QRreader-mask .aperture{
+            width: 50%;
+            height: 0;
+            padding-bottom: 50%;
+            border: 2px solid white;
+        }
+
+        .QRreader-mask .aperture .scan-line{
+            margin:0;
+            border: 2px solid white;
+            animation: scan 1s ease-in-out infinite alternate;
+        }
+        
+        .QRreader-mask .btn-switch{
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 3px solid white;
+            border-radius: 50%;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        @keyframes scan{
+            from{margin-top:0%;}
+            to{margin-top:100%;}
         }
     </style>
 </head>
@@ -43,8 +77,12 @@
         Network:
         <span id="network-status" class="">Good</span>
     </div>
-    <div id="mask">
-        <video autoplay="autoplay" muted="muted" playsinline></video>
+    <div class="QRreader-mask">
+        <video class="absolute-center" autoplay="autoplay" muted="muted" playsinline></video>
+        <div class="absolute-center aperture" >
+            <hr class="scan-line">
+        </div>
+        <bitton class="btn-switch" onclick="switchDevice()"></bitton>
     </div>
     <script src="QRreader.js"></script>
     <script type="text/javascript">
@@ -83,27 +121,10 @@
                     devices.forEach(function (device) {
                         msg.innerHTML += device.kind + ': ' + device.label + ' id = ' + device.deviceId + '<br>';
                     });
-                    cameras = getCameras(devices)
-                    screen = document.querySelector('#mask video')
-
-                    if (cameras.length >= 1) {
-                        var constraints = {
-                            video: {
-                                mandatory: {
-                                    sourceId: cameras[0].deviceId ? cameras[0].deviceId : null
-                                }
-                            },
-                            audio: false
-                        };
-
-                        navigator.mediaDevices.getUserMedia(constraints)
-                            .then(function (stream) {
-                                screen.srcObject = stream;
-                            })
-                            .catch(function(err) {
-                                console.log("Error occurred ", err);
-                            });
-                    }
+                    window.cameras = getCameras(devices)
+                    window.screen = document.querySelector('.QRreader-mask video')
+                    window.idx_cur = 0
+                    setCamera(cameras, window.idx_cur, screen)
                 })
 
         }
@@ -117,6 +138,38 @@
                 }
             }
             return res
+        }
+
+        function setCamera(cameras, idx, screen){
+            idx = idx % cameras.length
+
+            if(cameras.length > 0){
+                var constraints = {
+                    video: {
+                        mandatory: {
+                            sourceId: cameras[idx].deviceId ? cameras[idx].deviceId : null
+                        }
+                    },
+                    audio: false
+                };
+
+                navigator.mediaDevices.getUserMedia(constraints)
+                    .then(function (stream) {
+                        screen.srcObject = stream;
+                    })
+                    .catch(function(err) {
+                        console.log("Error occurred ", err);
+                    });
+            }
+
+        }
+
+        function switchDevice(){
+            var idx = window.idx_cur
+            var cameras = window.cameras
+            var screen = window.screen
+            window.idx_cur++
+            setCamera(cameras, idx, screen)
         }
         // function getCameras(mediaDevices) {
         //     return new Promise(function (resolve, reject) {
