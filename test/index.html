@@ -1,0 +1,70 @@
+<head>
+  <title>QR reader Demo</title>
+  <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" type="text/css" href="main.css">
+  <!-- 截至ios11.3，暂时不支持manifest.icons -->
+  <link rel="apple-touch-icon" href="./e.png" type="image/png"/>
+  <link rel="icon" href="./e.png" type="image/png" />
+</head>
+
+<body>
+  <div class="revision">Revision 8</div>
+  <img src="pwa-fonts.png">
+  <div class="main-text">
+
+  </div>
+  <div>
+    <input type="file" accept="image/*" multiple>
+  </div>
+  <div class="network-message">
+    Network:
+    <span id="network-status" class="">Good</span>
+  </div>
+  <div id="mask">
+    <canvas>
+
+    </canvas>
+  </div>
+  <script src="../src/QRreader.js"></script>
+  <script type="text/javascript">
+    if (navigator.serviceWorker != null) {
+      navigator.serviceWorker.register('sw.js')
+        .then(function (registration) {
+          console.log('Registered events at scope: ', registration.scope);
+        });
+    }
+
+    var statusEl = document.querySelector('#network-status')
+    if (!navigator.onLine) {
+      statusEl.classList = ['is-offline']
+      statusEl.innerText = 'Offline'
+    }
+
+    var msg = document.querySelector('.main-text')
+
+    // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
+    var d = 'navigator : ' + typeof navigator + '<br>'; 
+      d += 'MediaDevices:' + typeof MediaDevices + '<br>';
+      d += 'navigator.mediaDevices : ' + typeof navigator.mediaDevices + '<br>'; 
+    // try alternates
+      d += 'navigator.getUserMedia  : ' + typeof navigator.getUserMedia + '<br>';
+      d += 'navigator.webkitGetUserMedia  : ' + typeof navigator.webkitGetUserMedia + '<br>';
+    msg.innerHTML += d;
+
+
+    mediaDevices = getMediaDevices()
+    if(mediaDevices == null){
+      alert('mediaDevices not supported!')
+    }
+    else{
+      mediaDevices.enumerateDevices()
+      .then(function(devices) {
+        devices.forEach(function(device) {
+          msg.innerHTML += device.kind + ': ' + device.label + ' id = ' + device.deviceId + '<br>';
+        });
+      })
+    }
+  </script>
+</body>
