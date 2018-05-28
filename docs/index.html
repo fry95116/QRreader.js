@@ -126,12 +126,14 @@
                     devices.forEach(function (device) {
                         msg.innerHTML += device.kind + ': ' + device.label + ' id = ' + device.deviceId + '<br>';
                     });
-                    window.cameras = getCameras(devices)
-                    window.screen = document.querySelector('.QRreader-mask video')
-                    window.idx_cur = 0
-                    setCamera(cameras, window.idx_cur, screen)
                 })
-
+            window.constraints = [
+                { audio: true, video: { facingMode: "user" } },
+                { audio: true, video: { facingMode: { exact: "environment" } } }
+            ]
+            window.idx_cur = 0
+            window.screen = document.querySelector('.QRreader-mask video')
+            setCamera(window.constraints, window.idx_cur, screen)
         }
 
         function getCameras(devices){
@@ -145,17 +147,12 @@
             return res
         }
 
-        function setCamera(cameras, idx, screen){
+        function setCamera(constraints, idx, screen){
 
-            if(cameras.length > 0){
-                idx = idx % cameras.length
+            if(constraints.length > 0){
+                idx = idx % constraints.length
 
-                var constraints = {
-                    video: {
-                        facingMode: { exact: "environment" } 
-                    },
-                    audio: false
-                };
+                constraints = constraints[idx]
 
                 navigator.mediaDevices.getUserMedia(constraints)
                     .then(function (stream) {
@@ -176,9 +173,9 @@
             //     alert(k)
             // }
             var idx = window.idx_cur
-            var cameras = window.cameras
+            var constraints = window.constraints
             var screen = window.screen
-            window.idx_cur = setCamera(cameras, idx, screen) + 1
+            window.idx_cur = setCamera(constraints, idx, screen) + 1
         }
         // function getCameras(mediaDevices) {
         //     return new Promise(function (resolve, reject) {

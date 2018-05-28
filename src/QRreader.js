@@ -1,5 +1,4 @@
 (function () {
-
   /** 检查`test`是否不为undefined或者null */
   function isNotNil(test) {
     return typeof (test) != undefined || typeof (test) != null
