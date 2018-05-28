@@ -86,6 +86,7 @@
     </div>
     <script src="QRreader.js"></script>
     <script type="text/javascript">
+        // init service worker
         if (navigator.serviceWorker != null) {
             navigator.serviceWorker.register('sw.js')
                 .then(function (registration) {
@@ -93,23 +94,27 @@
                 });
         }
 
+        // get network info
         var statusEl = document.querySelector('#network-status')
         if (!navigator.onLine) {
             statusEl.classList = ['is-offline']
             statusEl.innerText = 'Offline'
         }
 
-        var msg = document.querySelector('.main-text')
-
         // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
-        var d = 'navigator : ' + typeof navigator + '<br>';
-        d += 'MediaDevices:' + typeof MediaDevices + '<br>';
-        d += 'navigator.mediaDevices : ' + typeof navigator.mediaDevices + '<br>';
-        // try alternates
-        d += 'navigator.getUserMedia  : ' + typeof navigator.getUserMedia + '<br>';
-        d += 'navigator.webkitGetUserMedia  : ' + typeof navigator.webkitGetUserMedia + '<br>';
-        msg.innerHTML += d;
+    
+        var msg = document.querySelector('.main-text')
+        msg.innerHTML += getSupportInfo().join('<br>')
 
+        function getSupportInfo(){
+            return [
+                'navigator : ' + typeof navigator,
+                'MediaDevices:' + typeof MediaDevices,
+                'navigator.mediaDevices: ' + typeof navigator.mediaDevices,
+                'navigator.getUserMedia: ' + typeof navigator.getUserMedia,
+                'navigator.webkitGetUserMedia' + typeof navigator.webkitGetUserMedia
+            ]
+        }
 
         var mediaDevices = getMediaDevices()
         if (mediaDevices == null) {
@@ -141,14 +146,13 @@
         }
 
         function setCamera(cameras, idx, screen){
-            idx = idx % cameras.length
 
             if(cameras.length > 0){
+                idx = idx % cameras.length
+
                 var constraints = {
                     video: {
-                        mandatory: {
-                            sourceId: cameras[idx].deviceId ? cameras[idx].deviceId : null
-                        }
+                        deviceId: cameras[idx].deviceId
                     },
                     audio: false
                 };
@@ -161,6 +165,7 @@
                         console.log("Error occurred ", err);
                     });
             }
+            return idx
 
         }
 
@@ -168,9 +173,7 @@
             var idx = window.idx_cur
             var cameras = window.cameras
             var screen = window.screen
-            window.idx_cur++
-            alert(cameras[idx].deviceId)
-            setCamera(cameras, idx, screen)
+            window.idx_cur = setCamera(cameras, idx, screen) + 1
         }
         // function getCameras(mediaDevices) {
         //     return new Promise(function (resolve, reject) {
