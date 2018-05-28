@@ -170,6 +170,7 @@
         }
 
         function switchDevice(){
+            alert(JSON.stringify(mediaDevices.getSupportedConstraints()))
             var idx = window.idx_cur
             var cameras = window.cameras
             var screen = window.screen
