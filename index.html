@@ -2,6 +2,8 @@
 <head>
   <title>Minimal PWA</title>
   <meta name="viewport" content="width=device-width, user-scalable=no" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" type="text/css" href="main.css">
   <link rel="icon" href="./e.png" type="image/png" />
@@ -33,11 +35,14 @@
 
     var msg = document.querySelector('.main-text')
     
-    var str1 = typeof MediaDevices
-    var str2 = typeof navigator.mediaDevices
 
-    msg.innerHTML += '<br>' + str1 + '<br>' + str2
-
-
+   // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
+   var d = 'typeof navigator : ' + typeof navigator + '<br>'; //object
+    d += 'typeof MediaDevices:' +  typeof MediaDevices + '<br>';
+    d += 'typeof navigator.mediaDevices : ' + typeof navigator.mediaDevices + '<br>'; // undefined
+    // try alternates
+    d += 'typeof navigator.getUserMedia  : ' + typeof navigator.getUserMedia + '<br>'; // undefined
+    d += 'typeof navigator.webkitGetUserMedia  : ' + typeof navigator.webkitGetUserMedia + '<br>'; // undefined
+    status1.innerHTML = d;
   </script>
 </body>
