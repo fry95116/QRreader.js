@@ -9,65 +9,59 @@
 
         this.frame = null
         this.display = null
-        this._idx_camera = 0
-        this.constraints = [
-            { audio: true, video: { facingMode: "user" } },
-            { audio: true, video: { facingMode: { exact: "environment" } } }
-        ]
-
+        this.isFront = false
+        this.stride = 0.618
         this.constructor = function () {
 
-            var btn_switch = document.createElement('button')
-            btn_switch.className = 'btn-switch'
-            // btn_switch.addEventListener('click',function(e){
-            //     switchDevice()
-            // })
+            var stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * this.stride)
+            stride = Math.min(stride, 420)
 
-            var scanLine = document.createElement('hr')
-            scanLine.className = 'scan-line'
-
-            var stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * 0.75)
-            var aperture = document.createElement('div')
-            aperture.className = 'absolute-center aperture'
-            aperture.style.width = stride + 'px'
-            aperture.style.paddingBottom = stride + 'px'
-            aperture.appendChild(scanLine)
-
-            this.display = document.createElement('video')
-            this.display.setAttribute('autoplay', 'autoplay')
-            this.display.setAttribute('muted', 'muted')
-            this.display.setAttribute('playsinline', 'playsinline')
-
+            var content = ''
+                + '<video autoplay="autoplay" muted="muted" playsinline></video>'
+                + '<div class="content-center">'
+                    + '<div class="aperture" style="width: ' + stride + 'px; height: ' + stride + 'px;">'
+                        + '<div class="scan-line"></div>'
+                        + '<div class="vertex left-bottom"></div>'
+                        + '<div class="vertex right-bottom"></div>'
+                        + '<div class="vertex left-top"></div>'
+                        + '<div class="vertex right-top"></div>'
+                    + '</div>'
+                    + '<div class="tips">将二维码放入取景框中</div>'
+                + '</div>'
+                + '<button class="btn-cancel">&times;</button>'
+                + '<button class="btn-switch">切换设备</buttion>'
             this.frame = document.createElement('div')
             this.frame.className = 'QRreader-mask'
-            this.frame.appendChild(this.display)
-            this.frame.appendChild(aperture)
+            this.frame.innerHTML = content
+
+            this.display = this.frame.getElementsByTagName('video')[0]
+            this.frame.querySelector('.btn-switch').addEventListener('click',()=>{
+                this.isFront = !this.isFront
+                this._setCamera(this.isFront)
+            })
         }
 
-        this.showFrame = function () {
-            document.body.appendChild(this.frame)
+        this._setCamera = function(){
             var mediaDevices = this.getMediaDevices()
             if (mediaDevices === null) alert('mediaDevices API not supported')
-            this._idx_camera = (this._idx_camera + 1) % this.constraints.length
-            var constraints = this.constraints[this._idx_camera]
-            this._idx_camera++
-            mediaDevices.getUserMedia(constraints)
+            else{
+                var constraints = { video: { facingMode: (this.isFront? "user" : "environment") } };
+                mediaDevices.getUserMedia(constraints)
                 .then((stream)=>{
                     this.display.srcObject = stream
                 })
                 .catch((err)=>{
-                    if (err instanceof OverconstrainedError) {
-                        mediaDevices.getUserMedia({ video: true, audio: false })
-                            .then((stream) => {
-                                this.display.srcObject = stream
-                            })
-                            .catch((err) => console.log('Error occured: ' + err.message))
-                    }
                     console.log('Error occured: ' + err.message)
                 })
+            }
+
+        }
+        this._showFrame = function () {
+            document.body.appendChild(this.frame)
+            this._setCamera()
         }
 
-        this.hideFrame = function () {
+        this._hideFrame = function () {
             document.body.removeChild(this.frame)
         }
 
