@@ -60,6 +60,19 @@
             from{margin-top:0%;}
             to{margin-top:100%;}
         }
+
+        label[for="qrcode-capture"]{
+            display: block;
+            width: 50px;
+            height: 30px;
+            background-color: blueviolet;
+        }
+        #qrcode-capture{
+            width: 0;
+            height: 0;
+        }
+
+        
     </style>
 </head>
 
@@ -70,19 +83,12 @@
 
     </div>
     <div>
-        <label class="btn-scanner" for="qrcode-capture"></label>
+        <label class="btn-scanner" for="qrcode-capture" onclick="return onScanClick()"></label>
         <input id="qrcode-capture" type="file" accept="image/*" multiple>
     </div>
     <div class="network-message">
         Network:
         <span id="network-status" class="">Good</span>
-    </div>
-    <div class="QRreader-mask">
-        <video class="absolute-center" autoplay="autoplay" muted="muted" playsinline></video>
-        <div class="absolute-center aperture" >
-            <hr class="scan-line">
-        </div>
-        <bitton class="btn-switch" onclick="switchDevice()"></bitton>
     </div>
     <script src="QRreader.js"></script>
     <script type="text/javascript">
@@ -116,86 +122,13 @@
             ]
         }
 
-        var mediaDevices = getMediaDevices()
-        if (mediaDevices == null) {
-            alert('mediaDevices not supported!')
-        }
-        else {
-            mediaDevices.enumerateDevices()
-                .then(function (devices) {
-                    devices.forEach(function (device) {
-                        msg.innerHTML += device.kind + ': ' + device.label + ' id = ' + device.deviceId + '<br>';
-                    });
-                })
-            window.constraints = [
-                { audio: true, video: { facingMode: "user" } },
-                { audio: true, video: { facingMode: { exact: "environment" } } }
-            ]
-            window.idx_cur = 0
-            window.screen = document.querySelector('.QRreader-mask video')
-            setCamera(window.constraints, window.idx_cur, screen)
-        }
-
-        function getCameras(devices){
-            res = []
-            for(idx in devices){
-                device = devices[idx]
-                if(device.kind === 'videoinput'){
-                    res.push(device)
-                }
+        var qr_reader = new QRreader()
+        function onScanClick(){
+            if(qr_reader.isSupported()){
+                qr_reader.showFrame()
+                return false
             }
-            return res
+            else return true
         }
-
-        function setCamera(constraints, idx, screen){
-
-            if(constraints.length > 0){
-                idx = idx % constraints.length
-
-                constraints = constraints[idx]
-
-                navigator.mediaDevices.getUserMedia(constraints)
-                    .then(function (stream) {
-                        screen.srcObject = stream;
-                    })
-                    .catch(function(err) {
-                        console.log("Error occurred ", err);
-                    });
-            }
-            return idx
-
-        }
-
-        function switchDevice(){
-            // alert('test')
-            // supportConstraints = navigator.mediaDevices.getSupportedConstraints()
-            // for (k in supportConstraints){
-            //     alert(k)
-            // }
-            var idx = window.idx_cur
-            var constraints = window.constraints
-            var screen = window.screen
-            window.idx_cur = setCamera(constraints, idx, screen) + 1
-        }
-        // function getCameras(mediaDevices) {
-        //     return new Promise(function (resolve, reject) {
-        //         if(!mediaDevices.enumerateDevices){
-        //             reject(new Error('enumerateDevices() not supported.'))
-        //         }
-        //         else{
-        //             mediaDevices.enumerateDevices()
-        //                 .then(function (devices) {
-        //                     var res = []
-        //                     devices.forEach(function (device) {
-        //                         // device.kind可能的值：'videoinput', 'audioinput'
-        //                         if (device.kind == 'videoinput')
-        //                             res.append(device)
-        //                     });
-        //                     resolve(res)
-        //                 })
-        //                 .catch(reject)
-        //         }
-        //     })
-        // }
     </script>
 </body>
