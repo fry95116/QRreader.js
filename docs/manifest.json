@@ -1,7 +1,7 @@
 {
   "name": "Minimal PWA",
   "short_name": "PWA Demo",
-  "display": "standalone",
+  "display": "fullscreen",
   "start_url": "/QRreader.js",
   "theme_color": "#313131",
   "background_color": "#313131",
