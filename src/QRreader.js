@@ -53,7 +53,7 @@
             this._idx_camera++
             mediaDevices.getUserMedia(constraints)
                 .then((stream)=>{
-                    this.display.srcObjcet = stream
+                    this.display.srcObject = stream
                 })
                 .catch((err)=>{
                     if (err instanceof OverconstrainedError) {
