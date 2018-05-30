@@ -5,6 +5,8 @@ rm ./docs/main.css
 
 echo -e '\n/******** jquery-3.3.1.slim.js *********/\n' >> ./docs/main.js
 cat ./src/js/jquery-3.3.1.slim.js >> ./docs/main.js
+echo -e '\n/******** jsqrcode.js *********/\n' >> ./docs/main.js
+cat ./src/js/jsqrcode.js >> ./docs/main.js
 echo -e '\n/******** QRreader.js *********/\n' >> ./docs/main.js
 cat ./src/js/QRreader.js >> ./docs/main.js
 

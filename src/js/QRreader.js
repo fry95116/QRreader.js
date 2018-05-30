@@ -4,7 +4,7 @@
         return typeof (test) != undefined || typeof (test) != null
     }
 
-    $.fn.QRreader = function(option){
+    $.fn.QRreader = function(option, onMsg){
 
         opt = {
             switchDevice: true,
@@ -12,6 +12,7 @@
         }
         
         option = $.extend(option, opt, {})
+
         var reader = new QRreader(option)
 
         this.each(function(){
@@ -20,9 +21,21 @@
                 return
             }
             $(this).click(()=>{
-                reader._showFrame()
+                reader._setCamera()
+                    .then(()=>reader._showFrame())
+                    .then(()=>reader._startCapture())
+                    .catch((err)=>{
+                        console.log('Error occured: ' + err.message)
+                        // if(window.iOS) alert('Error occured: ' + err.message)
+                    })
             })
         })
+
+        if(onMsg) qrcode.callback = function(text){
+            reader._clearCapture()
+            reader._hideFrame()
+            onMsg(text)
+        }
         
 
 
@@ -34,6 +47,8 @@
         this._display = null
         this._isFront = false
         this._stride = 0.618
+        this._ctx = null
+        this._timer_id = -1
         this.switchDevice = opt.switchDevice | true
         this.readFromAlbum = opt.readFromAlbum | true
 
@@ -42,6 +57,7 @@
         var template = ''
             + '<div class="QRreader-mask" style="display: none;">'
                 + '<video autoplay="autoplay" muted="muted" playsinline></video>'
+                + '<canvas id="qr-canvas" style="display:none;"></canvas>'
                 + '<div class="content-center">'
                     + '<div class="aperture">'
                         + '<div class="scan-line"></div>'
@@ -61,6 +77,8 @@
         this._frame = $(template)
         this._display = $('video', this._frame)
 
+        this._ctx = $('#qr-canvas', this._frame)[0].getContext('2d')
+
         $('.aperture', this._frame).width(stride).height(stride)
 
         if(this.switchDevice){
@@ -79,6 +97,7 @@
         }
 
         $('.btn-cancel', this._frame).click(()=>{
+            this._clearCapture()
             this._hideFrame()
         })
 
@@ -96,27 +115,74 @@
         this._frame.hide()
     }
 
-    QRreader.prototype._showFrame = function () {
-        this._setCamera()
-        this._frame.show()
+    QRreader.prototype._clearCapture = function(){
+        if(this._timer_id != -1){
+            clearInterval(this._timer_id)
+            this._timer_id = -1
+        }
+    }
+
+    QRreader.prototype._startCapture = function(){
+        return new Promise((resolve, reject)=>{
+            // todo: create a wait loop to instead
+            setTimeout(()=>{
+                $('#qr-canvas', this._frame).attr({
+                    'width': this._display[0].videoWidth + 'px',
+                    'height': this._display[0].videoHeight + 'px'
+                })
+                
+                if(this._ctx != null){
+                    this._clearCapture()
+                    this._timer_id = setInterval(()=>{
+                        this._ctx.drawImage(this._display[0], 0, 0)
+                        try{
+                            qrcode.decode()
+                        }
+                        catch(err){
+                            console.log(err)
+                        }
+                    }, 500)
+                }
+
+                resolve()
+            }, 1000)
+        })
+    }
+
+
+
+    QRreader.prototype._showFrame = function(){
+        return new Promise((resolve, reject)=>{
+            this._frame.show()
+            resolve();
+        })
     }
 
     QRreader.prototype._setCamera = function(){
-        var mediaDevices = this._getMediaDevices()
-        if (mediaDevices === null) alert('mediaDevices API not supported')
-        else{
-            if(this.switchDevice){
-                alert(this._isFront)
-                mediaDevices.getUserMedia(this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK)
-                .then((stream)=>{this._display[0].srcObject = stream})
-                .catch((err)=>{console.log('Error occured: ' + err.message)})
-            }
+        return new Promise((resolve, reject)=>{
+            var mediaDevices = this._getMediaDevices()
+            if (mediaDevices === null) 
+                reject('mediaDevices API not supported')
             else{
-                mediaDevices.getUserMedia(this.CONSTRAINTS_DEFAULT)
-                .then((stream)=>{this._display[0].srcObject = stream})
-                .catch((err)=>{console.log('Error occured: ' + err.message)})
+                if(this.switchDevice){
+                    // alert(this._isFront)
+                    mediaDevices.getUserMedia(this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK)
+                    .then((stream)=>{
+                        this._display[0].srcObject = stream
+                        resolve()
+                    })
+                    .catch(reject)
+                }
+                else{
+                    mediaDevices.getUserMedia(this.CONSTRAINTS_DEFAULT)
+                    .then((stream)=>{
+                        this._display[0].srcObject = stream
+                        resolve()
+                    })
+                    .catch(reject)
+                }
             }
-        }
+        })
     }
 
     /** 判断当前上下文是否支持MediaDevices接口 */

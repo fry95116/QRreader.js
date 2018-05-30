@@ -52,18 +52,12 @@
                 'MediaDevices:' + typeof MediaDevices,
                 'navigator.mediaDevices: ' + typeof navigator.mediaDevices,
                 'navigator.getUserMedia: ' + typeof navigator.getUserMedia,
-                'navigator.webkitGetUserMedia' + typeof navigator.webkitGetUserMedia
+                'navigator.webkitGetUserMedia: ' + typeof navigator.webkitGetUserMedia
             ]
         }
 
-        $('.btn-scanner').QRreader({readFromAlbum: true})
-        // var qr_reader = new QRreader()
-        // function onScanClick(){
-        //     if(qr_reader.isSupported()){
-        //         qr_reader._showFrame()
-        //         return false
-        //     }
-        //     else return true
-        // }
+        $('.btn-scanner').QRreader({readFromAlbum: true}, function(text){
+            alert(text)
+        })
     </script>
 </body>

@@ -17,6 +17,7 @@ body {
 
 .main-text {
   white-space: nowrap;
+  font-size: small;
 }
 
 img {
