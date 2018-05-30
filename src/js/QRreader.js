@@ -66,8 +66,8 @@
         if(this.switchDevice){
             var $btn_switch = $('<button class="btn btn-switch">切换设备</button>')
             $btn_switch.click(()=>{
-                this._isFront = !this.isFront
-                this._setCamera(this.isFront)
+                this._isFront = !this._isFront
+                this._setCamera(this._isFront)
             })
             this._frame.append($btn_switch)
         }
