@@ -8381,6 +8381,7 @@
         if (mediaDevices === null) alert('mediaDevices API not supported')
         else{
             if(this.switchDevice){
+                alert(this._isFront)
                 mediaDevices.getUserMedia(this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK)
                 .then((stream)=>{this._display[0].srcObject = stream})
                 .catch((err)=>{console.log('Error occured: ' + err.message)})
