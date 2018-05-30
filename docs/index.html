@@ -4,7 +4,6 @@
 
     <link rel="manifest" href="manifest.json" />
     <link rel="stylesheet" type="text/css" href="main.css">
-    <link rel="stylesheet" type="text/css" href="QRreader.css">
 
     <!-- 截至ios11.3，暂时不支持manifest.icons -->
     <link rel="apple-touch-icon" href="./e.png" type="image/png" />
@@ -19,13 +18,13 @@
     </div>
     <div>
         <label class="btn-scanner" for="qrcode-capture" onclick="return onScanClick()">SCAN QRcode</label>
-        <input id="qrcode-capture" type="file" accept="image/*" capture="camera">
+        <input id="QRreader-file-input" type="file" accept="image/*" multiple>
     </div>
     <div class="network-message">
         Network:
         <span id="network-status" class="">Good</span>
     </div>
-    <script src="QRreader.js"></script>
+    <script src="main.js"></script>
     <script type="text/javascript">
         // init service worker
         if (navigator.serviceWorker != null) {
