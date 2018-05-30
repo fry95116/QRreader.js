@@ -8,28 +8,36 @@
 
         opt = {
             switchDevice: true,
-            readFromAlbum: false
+            readFromAlbum: true
         }
         
-        opt = $.extend(option, opt)
+        option = $.extend(option, opt, {})
+        var reader = new QRreader(option)
 
         this.each(function(){
             if(this.tagName.toUpperCase() !== 'LABEL'){
                 console.log('please load this plugin on <label> element.')
+                return
             }
+            $(this).click(()=>{
+                reader._showFrame()
+            })
         })
+        
+
+
     }
 
+    function QRreader(opt) {
 
+        this._frame = null
+        this._display = null
+        this._isFront = false
+        this._stride = 0.618
+        this.switchDevice = opt.switchDevice | true
+        this.readFromAlbum = opt.readFromAlbum | true
 
-    function QRreader() {
-
-        this.frame = null
-        this.display = null
-        this.isFront = false
-        this.stride = 0.618
-
-        var stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * this.stride)
+        var stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * this._stride)
 
         var template = ''
             + '<div class="QRreader-mask" style="display: none;">'
@@ -45,26 +53,36 @@
                     + '<div class="tips">将二维码放入取景框中</div>'
                 + '</div>'
                 + '<button class="btn btn-cancel">&lt; 返回</button>'
-                + '<button class="btn btn-switch">切换设备</button>'
+                + ''
                 + '<label class="btn btn-album" for="QRreader-file-input">相册</label>'
                 + '<input id="QRreader-file-input" type="file" accept="image/*">'
             + '</div>'
 
-        this.frame = $(template)
-        this.display = $('video', this.frame)
+        this._frame = $(template)
+        this._display = $('video', this._frame)
 
-        $('.aperture', this.frame).css({width: stride + 'px', height: stride + 'px'})
+        $('.aperture', this._frame).width(stride).height(stride)
 
-        $('.btn-switch', this.frame).click(()=>{
-            this.isFront = !this.isFront
-            this._setCamera(this.isFront)
-        })
+        if(this.switchDevice){
+            var $btn_switch = $('<button class="btn btn-switch">切换设备</button>')
+            $btn_switch.click(()=>{
+                this._isFront = !this.isFront
+                this._setCamera(this.isFront)
+            })
+            this._frame.append($btn_switch)
+        }
+        if(this.readFromAlbum){
+            var $btn_switch = $('<label class="btn btn-album" for="QRreader-file-input">相册</label>')
+            var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*">')
+            this._frame.append($btn_switch)
+            this._frame.append($file_input)
+        }
 
-        $('.btn-cancel', this.frame).click(()=>{
+        $('.btn-cancel', this._frame).click(()=>{
             this._hideFrame()
         })
 
-        $('body').append(this.frame)
+        $('body').append(this._frame)
     }
 
     QRreader.prototype.CONSTRAINTS_DEFAULT      = { video: true, audio: false }
@@ -73,28 +91,30 @@
 
 
     QRreader.prototype._hideFrame = function () {
-        if(this.display[0] !== null)
-            this.display[0].srcObject = null
-        this.frame.hide()
+        if(this._display[0] !== null)
+            this._display[0].srcObject = null
+        this._frame.hide()
     }
 
     QRreader.prototype._showFrame = function () {
         this._setCamera()
-        this.frame.show()
+        this._frame.show()
     }
 
     QRreader.prototype._setCamera = function(){
         var mediaDevices = this._getMediaDevices()
         if (mediaDevices === null) alert('mediaDevices API not supported')
         else{
-            var constraints = { video: { facingMode: (this.isFront? "user" : "environment") } };
-            mediaDevices.getUserMedia(constraints)
-            .then((stream)=>{
-                this.display[0].srcObject = stream
-            })
-            .catch((err)=>{
-                console.log('Error occured: ' + err.message)
-            })
+            if(this.switchDevice){
+                mediaDevices.getUserMedia(this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK)
+                .then((stream)=>{this._display[0].srcObject = stream})
+                .catch((err)=>{console.log('Error occured: ' + err.message)})
+            }
+            else{
+                mediaDevices.getUserMedia(this.CONSTRAINTS_DEFAULT)
+                .then((stream)=>{this._display[0].srcObject = stream})
+                .catch((err)=>{console.log('Error occured: ' + err.message)})
+            }
         }
     }
 
@@ -132,6 +152,4 @@
     QRreader.prototype._isMediaDevices = function (test) {
         return isNotNil(test.enumerateDevices) && isNotNil(test.getUserMedia)
     }
-
-    window.QRreader = QRreader
 })(jQuery)
