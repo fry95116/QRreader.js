@@ -74,7 +74,7 @@
         }
         
         option = $.extend({}, opt, option)
-
+        alert('test')
         alert(getMediaDevices())
         if(false){
             var reader = new QRreader(option)
