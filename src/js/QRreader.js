@@ -76,6 +76,7 @@
         
         option = $.extend({}, opt, option)
 
+        alert('test')
         alert(getMediaDevices())
         
         if(getMediaDevices() !== null){

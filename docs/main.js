@@ -11759,7 +11759,6 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
     /** 获取MediaDevices接口，如果不支持则返回null */
     function getMediaDevices () {
         var res = null
-
         if (isNotNil(navigator)) {
             if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
                 res = navigator.mediaDevices
@@ -11811,9 +11810,11 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         }
         
         option = $.extend({}, opt, option)
-        // alert('test')
+
+        alert('test')
         alert(getMediaDevices())
-        if(getMediaDevices()){
+        
+        if(getMediaDevices() !== null){
             var reader = new QRreader(option)
 
             this.each(function(){
@@ -11832,7 +11833,6 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
                         })
                         .catch((err)=>{
                             console.log('Error occured: ' + err.message)
-                            // if(window.iOS) alert('Error occured: ' + err.message)
                         })
                 })
             })
