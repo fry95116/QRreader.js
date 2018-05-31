@@ -56,8 +56,11 @@
             ]
         }
 
-        $('.btn-scanner').QRreader({readFromAlbum: true}, function(text){
-            alert(text)
+        $('.btn-scanner').QRreader({
+            readFromAlbum: true,
+            onDetected: function(res){
+                alert('res:' + res)
+            }
         })
     </script>
 </body>
