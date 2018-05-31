@@ -11760,7 +11760,6 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
     function getMediaDevices () {
         var res = null
 
-        alert('getMediaDevices')
         if (isNotNil(navigator)) {
             if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
                 res = navigator.mediaDevices
@@ -11784,7 +11783,7 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
 
     /** 检查`test`是否实现的MediaDevices接口 */
     function isMediaDevices (test) {
-        return isNotNil(test.enumerateDevices) && isNotNil(test.getUserMedia)
+        return isNotNil(test.getUserMedia)
     }
 
     function decodeFromFile(file){

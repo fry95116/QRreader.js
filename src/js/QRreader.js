@@ -24,7 +24,6 @@
     /** 获取MediaDevices接口，如果不支持则返回null */
     function getMediaDevices () {
         var res = null
-
         if (isNotNil(navigator)) {
             if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
                 res = navigator.mediaDevices
@@ -48,7 +47,7 @@
 
     /** 检查`test`是否实现的MediaDevices接口 */
     function isMediaDevices (test) {
-        return isNotNil(test.enumerateDevices) && isNotNil(test.getUserMedia)
+        return isNotNil(test.getUserMedia)
     }
 
     function decodeFromFile(file){
@@ -76,9 +75,10 @@
         }
         
         option = $.extend({}, opt, option)
-        // alert('test')
+
         alert(getMediaDevices())
-        if(getMediaDevices()){
+        
+        if(getMediaDevices() !== null){
             var reader = new QRreader(option)
 
             this.each(function(){
@@ -97,7 +97,6 @@
                         })
                         .catch((err)=>{
                             console.log('Error occured: ' + err.message)
-                            // if(window.iOS) alert('Error occured: ' + err.message)
                         })
                 })
             })
