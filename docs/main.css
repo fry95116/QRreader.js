@@ -164,7 +164,7 @@ img {
     to{top:90%;}
 }
 
-label[for="qrcode-capture"]{
+label.btn-scanner{
     display: block;
     margin-top: 1em;
     padding: 0.5em;

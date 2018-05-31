@@ -11784,6 +11784,21 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         return isNotNil(test.enumerateDevices) && isNotNil(test.getUserMedia)
     }
 
+    function decodeFromFile(file){
+        return new Promise((resolve, reject)=>{
+            var reader = new FileReader()
+            reader.onload = function(e) {
+                try{
+                    res = qrcode.decode(e.target.result);
+                    resolve(res)
+                }
+                catch(err){
+                    reject(err)
+                }
+            }
+            reader.readAsDataURL(file);	
+        })
+    }
 
     $.fn.QRreader = function(option, onMsg){
 
@@ -11819,6 +11834,28 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
                 })
             })
         }
+        else{
+            this.each(function(){
+                if(this.tagName.toUpperCase() !== 'LABEL'){
+                    console.log('please load this plugin on <label> element.')
+                    return
+                }
+                this.setAttribute('for', 'QRreader-file-input')
+                var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*">')
+                $file_input.change(function(){
+                    if(this.files.length === 0) return
+                    decodeFromFile(this.files[0])
+                    .then((res)=>{
+                        if(option.onDetected) option.onDetected(res)
+                    })
+                    .catch(()=>{
+                        console.log('Error occured: ' + err.message)
+                    })
+                })
+                $(this).after($file_input)
+            })
+
+        }
     }
 
     function QRreader(opt) {
@@ -11829,8 +11866,13 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         this._stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * 0.618)
         this._ctx = null
         this._timer_id = -1
-        this.switchDevice = opt.switchDevice | true
-        this.readFromAlbum = opt.readFromAlbum | true
+
+        this.switchDevice = true
+        this.readFromAlbum = true
+        if(typeof opt.switchDevice !== 'undefined')
+            this.switchDevice = opt.switchDevice
+        if(typeof opt.readFromAlbum !== 'undefined')
+            this.readFromAlbum = opt.readFromAlbum
 
         var template = ''
             + '<div class="QRreader-mask" style="display: none;">'
@@ -11847,9 +11889,6 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
                     + '<div class="tips">将二维码放入取景框中</div>'
                 + '</div>'
                 + '<button class="btn btn-cancel">&lt; 返回</button>'
-                + ''
-                + '<label class="btn btn-album" for="QRreader-file-input">相册</label>'
-                + '<input id="QRreader-file-input" type="file" accept="image/*">'
             + '</div>'
 
         this._frame = $(template)

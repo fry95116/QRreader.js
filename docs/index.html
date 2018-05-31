@@ -17,8 +17,7 @@
 
     </div>
     <div>
-        <label class="btn-scanner" for="qrcode-capture" onclick="return false">SCAN QRcode</label>
-        <input id="QRreader-file-input" type="file" accept="image/*" multiple>
+        <label class="btn-scanner">SCAN QRcode</label>
     </div>
     <div class="network-message">
         Network:
@@ -57,7 +56,7 @@
         }
 
         $('.btn-scanner').QRreader({
-            readFromAlbum: true,
+            readFromAlbum: false,
             onDetected: function(res){
                 alert('res:' + res)
             }
