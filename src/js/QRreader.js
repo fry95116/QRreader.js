@@ -1,7 +1,9 @@
+
+
 (function ($) {
     /** 检查`test`是否不为undefined或者null */
     function isNotNil(test) {
-        return typeof (test) != undefined || typeof (test) != null
+        return typeof (test) !== 'undefined' || test !== null
     }
 
     function waitUntil(condition, timeout){
@@ -44,8 +46,6 @@
         return res
     }
 
-    window.getMediaDevices = getMediaDevices
-
     /** 检查`test`是否实现的MediaDevices接口 */
     function isMediaDevices (test) {
         return isNotNil(test.enumerateDevices) && isNotNil(test.getUserMedia)
@@ -77,8 +77,8 @@
         
         option = $.extend({}, opt, option)
         // alert('test')
-        // alert(getMediaDevices())
-        if(false){
+        alert(getMediaDevices())
+        if(getMediaDevices()){
             var reader = new QRreader(option)
 
             this.each(function(){

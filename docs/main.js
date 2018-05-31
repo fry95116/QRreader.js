@@ -11733,10 +11733,12 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
 
 /******** QRreader.js *********/
 
+
+
 (function ($) {
     /** 检查`test`是否不为undefined或者null */
     function isNotNil(test) {
-        return typeof (test) != undefined || typeof (test) != null
+        return typeof (test) !== 'undefined' || test !== null
     }
 
     function waitUntil(condition, timeout){
@@ -11758,6 +11760,7 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
     function getMediaDevices () {
         var res = null
 
+        alert('getMediaDevices')
         if (isNotNil(navigator)) {
             if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
                 res = navigator.mediaDevices
@@ -11778,8 +11781,6 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
 
         return res
     }
-
-    window.getMediaDevices = getMediaDevices
 
     /** 检查`test`是否实现的MediaDevices接口 */
     function isMediaDevices (test) {
@@ -11812,8 +11813,8 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         
         option = $.extend({}, opt, option)
         // alert('test')
-        // alert(getMediaDevices())
-        if(false){
+        alert(getMediaDevices())
+        if(getMediaDevices()){
             var reader = new QRreader(option)
 
             this.each(function(){
