@@ -11813,8 +11813,7 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         }
         
         option = $.extend({}, opt, option)
-        if(false){
-        // if(getMediaDevices() !== null){
+        if(getMediaDevices() !== null){
             var reader = new QRreader(option)
 
             this.each(function(){
