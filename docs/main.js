@@ -11793,8 +11793,8 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
             var reader = new FileReader()
             reader.onload = function(e) {
                 try{
-                    res = qrcode.decode(e.target.result);
-                    resolve(res)
+                    qrcode.decode(e.target.result);
+                    qrcode.callback = resolve
                 }
                 catch(err){
                     reject(err)
@@ -11813,8 +11813,8 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         }
         
         option = $.extend({}, opt, option)
-        
-        if(getMediaDevices() !== null){
+        if(false){
+        // if(getMediaDevices() !== null){
             var reader = new QRreader(option)
 
             this.each(function(){
