@@ -44,6 +44,8 @@
         return res
     }
 
+    window.getMediaDevices = getMediaDevices
+
     /** 检查`test`是否实现的MediaDevices接口 */
     function isMediaDevices (test) {
         return isNotNil(test.enumerateDevices) && isNotNil(test.getUserMedia)
@@ -74,8 +76,8 @@
         }
         
         option = $.extend({}, opt, option)
-        alert('test')
-        alert(getMediaDevices())
+        // alert('test')
+        // alert(getMediaDevices())
         if(false){
             var reader = new QRreader(option)
 
