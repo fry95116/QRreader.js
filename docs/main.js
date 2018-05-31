@@ -11842,7 +11842,7 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
                     return
                 }
                 this.setAttribute('for', 'QRreader-file-input')
-                var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*">')
+                var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*" multiple>')
                 $file_input.change(function(){
                     if(this.files.length === 0) return
                     decodeFromFile(this.files[0])
@@ -11910,7 +11910,7 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
         }
         if(this.readFromAlbum){
             var $btn_switch = $('<label class="btn btn-album" for="QRreader-file-input">相册</label>')
-            var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*">')
+            var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*" capture="camera">')
             this._frame.append($btn_switch)
             this._frame.append($file_input)
         }
