@@ -75,7 +75,8 @@
         
         option = $.extend({}, opt, option)
 
-        if(getMediaDevices() !== null){
+        alert(getMediaDevices())
+        if(false){
             var reader = new QRreader(option)
 
             this.each(function(){
@@ -117,6 +118,7 @@
                         console.log('Error occured: ' + err.message)
                     })
                 })
+                alert('add file input')
                 $(this).after($file_input)
             })
 

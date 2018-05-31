@@ -175,4 +175,5 @@ label.btn-scanner{
 #QRreader-file-input{
     width: 0;
     height: 0;
+    outline: none;
 }
