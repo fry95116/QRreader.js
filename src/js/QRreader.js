@@ -23,15 +23,24 @@
     }
     /** 获取MediaDevices接口，如果不支持则返回null */
     function getMediaDevices () {
-        var res = null
+		var res = null
+		
+		alert('0')
         if (isNotNil(navigator)) {
+			alert('1')
             if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
+				alert('2')
+
                 res = navigator.mediaDevices
             }
             else if (isMediaDevices(navigator)) {
+				alert('3')
+
                 res = navigator
             }
             else if (isNotNil(navigator.webkitEnumerateDevices) && isNotNil(navigator.webkitGetUserMedia)) {
+				alert('4')
+
                 navigator.enumerateDevices = navigator.webkitEnumerateDevices
                 navigator.getUserMedia = navigator.webkitGetUserMedia
                 res = navigator
@@ -39,9 +48,11 @@
         }
 
         else if (isNotNil(MediaDevices) && isMediaDevices(MediaDevices)) {
-            res = MediaDevices
-        }
+			alert('5')
 
+            res = MediaDevices
+		}
+		alert('6:' + res)
         return res
     }
 
