@@ -26,22 +26,14 @@
     function getMediaDevices () {
 		var res = null
 		
-		alert('0')
         if (isNotNil(navigator)) {
-			alert('1')
             if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
-				alert('2')
-
                 res = navigator.mediaDevices
             }
             else if (isMediaDevices(navigator)) {
-				alert('3')
-
                 res = navigator
             }
             else if (isNotNil(navigator.webkitEnumerateDevices) && isNotNil(navigator.webkitGetUserMedia)) {
-				alert('4')
-
                 navigator.enumerateDevices = navigator.webkitEnumerateDevices
                 navigator.getUserMedia = navigator.webkitGetUserMedia
                 res = navigator
@@ -49,11 +41,8 @@
         }
 
         else if (isNotNil(MediaDevices) && isMediaDevices(MediaDevices)) {
-			alert('5')
-
             res = MediaDevices
 		}
-		alert('6:' + res)
         return res
     }
 
@@ -89,9 +78,6 @@
         }
         
         option = $.extend({}, opt, option)
-
-        alert('test')
-        alert(getMediaDevices())
         
         if(getMediaDevices() !== null){
             var reader = new QRreader(option)
@@ -134,7 +120,6 @@
                         console.log('Error occured: ' + err.message)
                     })
                 })
-                alert('add file input')
                 $(this).after($file_input)
             })
 
