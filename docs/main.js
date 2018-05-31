@@ -11738,7 +11738,8 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
 (function ($) {
     /** 检查`test`是否不为undefined或者null */
     function isNotNil(test) {
-        return typeof (test) !== 'undefined' || test !== null
+        return !(test == null)
+        // return typeof (test) !== 'undefined' || test !== null
     }
 
     function waitUntil(condition, timeout){
@@ -11790,6 +11791,8 @@ function AlignmentPatternFinder(image, startX, startY, width, height, moduleSize
 		alert('6:' + res)
         return res
     }
+
+    window.getMediaDevices = getMediaDevices
 
     /** 检查`test`是否实现的MediaDevices接口 */
     function isMediaDevices (test) {

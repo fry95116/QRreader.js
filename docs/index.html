@@ -1,65 +1,67 @@
-<head>
-    <title>QR reader Demo</title>
-    <meta name="viewport" content="width=device-width, user-scalable=no" />
+<html>
+    <head>
+        <title>QR reader Demo</title>
+        <meta name="viewport" content="width=device-width, user-scalable=no" />
 
-    <link rel="manifest" href="manifest.json" />
-    <link rel="stylesheet" type="text/css" href="main.css">
+        <link rel="manifest" href="manifest.json" />
+        <link rel="stylesheet" type="text/css" href="main.css">
 
-    <!-- 截至ios11.3，暂时不支持manifest.icons -->
-    <link rel="apple-touch-icon" href="./e.png" type="image/png" />
-    <link rel="icon" href="./e.png" type="image/png" />
-</head>
+        <!-- 截至ios11.3，暂时不支持manifest.icons -->
+        <link rel="apple-touch-icon" href="./e.png" type="image/png" />
+        <link rel="icon" href="./e.png" type="image/png" />
+    </head>
 
-<body>
-    <div class="revision">Revision 8</div>
-    <img src="pwa-fonts.png">
-    <div class="main-text">
+    <body>
+        <div class="revision">Revision 8</div>
+        <img src="pwa-fonts.png">
+        <div class="main-text">
 
-    </div>
-    <div>
-        <label class="btn-scanner">SCAN QRcode</label>
-    </div>
-    <div class="network-message">
-        Network:
-        <span id="network-status" class="">Good</span>
-    </div>
-    <script src="main.js"></script>
-    <script type="text/javascript">
-        // init service worker
-        if (navigator.serviceWorker != null) {
-            navigator.serviceWorker.register('sw.js')
-                .then(function (registration) {
-                    console.log('Registered events at scope: ', registration.scope);
-                });
-        }
-
-        // get network info
-        var statusEl = document.querySelector('#network-status')
-        if (!navigator.onLine) {
-            statusEl.classList = ['is-offline']
-            statusEl.innerText = 'Offline'
-        }
-
-        // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
-    
-        var msg = document.querySelector('.main-text')
-        msg.innerHTML += getSupportInfo().join('<br>')
-
-        function getSupportInfo(){
-            return [
-                'navigator : ' + typeof navigator,
-                'MediaDevices:' + typeof MediaDevices,
-                'navigator.mediaDevices: ' + typeof navigator.mediaDevices,
-                'navigator.getUserMedia: ' + typeof navigator.getUserMedia,
-                'navigator.webkitGetUserMedia: ' + typeof navigator.webkitGetUserMedia
-            ]
-        }
-
-        $('.btn-scanner').QRreader({
-            readFromAlbum: false,
-            onDetected: function(res){
-                alert('res:' + res)
+        </div>
+        <div>
+            <label class="btn-scanner">SCAN QRcode</label>
+        </div>
+        <div class="network-message">
+            Network:
+            <span id="network-status" class="">Good</span>
+        </div>
+        <script src="main.js"></script>
+        <script type="text/javascript">
+            // init service worker
+            if (navigator.serviceWorker != null) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function (registration) {
+                        console.log('Registered events at scope: ', registration.scope);
+                    });
             }
-        })
-    </script>
-</body>
+
+            // get network info
+            var statusEl = document.querySelector('#network-status')
+            if (!navigator.onLine) {
+                statusEl.classList = ['is-offline']
+                statusEl.innerText = 'Offline'
+            }
+
+            // for some reason safari on mac can debug ios safari page but not ios home screen web apps 
+
+            var msg = document.querySelector('.main-text')
+            msg.innerHTML += getSupportInfo().join('<br>')
+
+            function getSupportInfo() {
+                return [
+                    'navigator : ' + typeof navigator,
+                    'MediaDevices:' + typeof MediaDevices,
+                    'navigator.mediaDevices: ' + typeof navigator.mediaDevices,
+                    'navigator.getUserMedia: ' + typeof navigator.getUserMedia,
+                    'navigator.webkitGetUserMedia: ' + typeof navigator.webkitGetUserMedia
+                ]
+            }
+
+            $('.btn-scanner').QRreader({
+                readFromAlbum: false,
+                onDetected: function(res){
+                    alert('res:' + res)
+                }
+            })
+        </script>
+    </body>
+</html>
