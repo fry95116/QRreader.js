@@ -2,82 +2,30 @@
 
     const util = require('./util.js')
     const jsqr = require('jsqr')
-    // $.fn.QRreader = function(option, onMsg){
-
-    //     var opt = {
-    //         switchDevice: true,
-    //         readFromAlbum: true,
-    //         onDetected: null
-    //     }
-        
-    //     option = $.extend({}, opt, option)
-    //     if(getMediaDevices() !== null){
-    //         var reader = new QRreader(option)
-
-    //         this.each(function(){
-    //             if(this.tagName.toUpperCase() !== 'LABEL'){
-    //                 console.log('please load this plugin on <label> element.')
-    //                 return
-    //             }
-    //             $(this).click(()=>{
-    //                 reader._setCamera()
-    //                     .then(()=>reader._showFrame())
-    //                     .then(()=>reader._startCapture())
-    //                     .then((res)=>{
-    //                         reader._clearCapture()
-    //                         reader._hideFrame()
-    //                         if(option.onDetected) option.onDetected(res)
-    //                     })
-    //                     .catch((err)=>{
-    //                         console.log('Error occured: ' + err.message)
-    //                     })
-    //             })
-    //         })
-    //     }
-    //     else{
-    //         this.each(function(){
-    //             if(this.tagName.toUpperCase() !== 'LABEL'){
-    //                 console.log('please load this plugin on <label> element.')
-    //                 return
-    //             }
-    //             this.setAttribute('for', 'QRreader-file-input')
-    //             var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*" multiple>')
-    //             $file_input.change(function(){
-    //                 if(this.files.length === 0) return
-    //                 decodeFromFile(this.files[0])
-    //                 .then((res)=>{
-    //                     if(option.onDetected) option.onDetected(res)
-    //                 })
-    //                 .catch(()=>{
-    //                     console.log('Error occured: ' + err.message)
-    //                 })
-    //             })
-    //             $(this).after($file_input)
-    //         })
-
-    //     }
-    // }
 
     class QRreader {
         constructor(opt) {
             
-            this._isFront = false;
-            this._stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * 0.618);
-            this._frame = null;  // 
-            this._display = null;
-            this._canvas = null;
-            this._ctx = null;
+            this._isFront = false
+            this._stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * 0.618)
+            this._frame = null
+            this._display = null
+            this._image = null
+            this._canvas = null
+            this._ctx = null
+            this._fileInput = null
 
-            // this._timer_id = -1;
-            this.isCapturing = false;
-            this.switchDevice = true;
-            this.readFromAlbum = true;
+            // this._timer_id = -1
+            this._isHiding = true
+            this._isCapturing = false
+            this.switchDevice = true
+            this.readFromAlbum = true
 
             if (typeof opt !== 'undefined'){
                 if (typeof opt.switchDevice !== 'undefined')
-                    this.switchDevice = opt.switchDevice;
+                    this.switchDevice = opt.switchDevice
                 if (typeof opt.readFromAlbum !== 'undefined')
-                    this.readFromAlbum = opt.readFromAlbum;
+                    this.readFromAlbum = opt.readFromAlbum
             }
 
             var template = ''
@@ -134,13 +82,13 @@
 
             document.body.appendChild(this._frame)
             
-            var file_input = document.createElement('input')
-            file_input.setAttribute('id', 'QRreader-file-input')
-            file_input.setAttribute('type', 'file')
-            file_input.setAttribute('accept', 'image/*')
-            file_input.setAttribute('capture', 'camera')
-            //TODO: set change event
-            document.body.appendChild(file_input)
+            this._fileInput = document.createElement('input')
+            this._fileInput.setAttribute('id', 'QRreader-file-input')
+            this._fileInput.setAttribute('type', 'file')
+            this._fileInput.setAttribute('accept', 'image/*')
+            this._fileInput.setAttribute('capture', 'camera')
+ 
+            document.body.appendChild(this._fileInput)
         }
 
         hook(el, onDetected){
@@ -149,22 +97,49 @@
                 return
             }
             el.setAttribute('for', 'QRreader-file-input')
+            // if(false){
             if(util.getMediaDevices() !== null){
-
-                var ret = null
+                // read image from camera
                 var doOnClick = async ()=>{
+                    
+                    var ret = null
+
                     try{
                         await this._setCamera()
                         this._showFrame()
-                        ret = await this._startCapture()
+
+                        if(this.readFromAlbum){
+
+                            var readFromFileInputOnce = new Promise((resolve)=>{
+                                var onChange = async (e)=>{
+                                    this._fileInput.removeEventListener('change', onChange)
+                                    if(this._fileInput.files.length === 0) return
+                                    var ret = await this._readQRcodeFromFile(this._fileInput.files[0])
+                                    resolve(ret)
+                                }
+                                this._fileInput.addEventListener('change', onChange)
+                            })
+                            
+                            ret = await Promise.race([
+                                readFromFileInputOnce,
+                                this._startCapture()
+                            ])
+                        }
+                        else{
+                            ret = await this._startCapture()
+                        }
                     }
                     catch(err){
                         console.log(err)
+                        return
                     }
+
                     this._clearCapture()
                     this._hideFrame()
 
-                    var ret = ret.data || null
+                    if(ret && ret.data) ret = ret.data
+                    else ret = null
+
                     await util.sleep(10)
                     if(onDetected) onDetected(ret)
                 }
@@ -172,42 +147,47 @@
                     doOnClick()
                     return false;
                 }
-                // el.addEventListener('click', ()=>{
-                //     // (async ()=>{
-                //     //     await this._setCamera()
-                //     //     this._showFrame()
-                //     //     var ret = await this._startCapture()
-                //     //     this._clearCapture()
-                //     //     this._hideFrame()
-                //     //     if(onDetected) onDetected(ret)
-                //     // })()
-                //     alert('onClick')
-                //     return false
-                // })
+            }
+            else{
+                // read image from file
+                el.onclick = null
+                //TODO: onchange的修改可能会造成内存泄漏
+                this._fileInput.addEventListener('change', async ()=>{
+                    if(this._fileInput.files.length === 0) return
+                    var ret = await this._readQRcodeFromFile(this._fileInput.files[0])
+
+                    if(ret && ret.data) ret = ret.data
+                    else ret = null
+
+                    if(onDetected) onDetected(ret)
+                })
             }
         }
-        // _setCamera() {
-        //     return new Promise(async (resolve, reject) => {
-        //         var mediaDevices = util.getMediaDevices()
-        //         if (mediaDevices === null)
-        //             reject('mediaDevices API not supported')
-        //         else {
-        //             var constraints = this.CONSTRAINTS_DEFAULT
-        //             if (this.switchDevice) {
-        //                 constraints = this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK
-        //             }
-        //             try{
-        //                 var stream = await mediaDevices.getUserMedia(constraints)
-        //                 this._display.srcObject = stream
-        //                 resolve()
-        //             }
-        //             catch(err){
-        //                 reject(err)
-        //             }
-        //         }
-        //     });
-        // }
 
+        async _readQRcodeFromFile(file){
+
+            try{
+                var dataUrl = await util.castFileToDataUrl(file)
+                var img = await util.castDataUrlToImage(dataUrl)
+            }
+            catch(err){
+                console.log(err)
+                return null
+            }
+
+            var width_canvas = img.width
+            var height_canvas = img.height
+
+            this._canvas.setAttribute('width', width_canvas + 'px')
+            this._canvas.setAttribute('height', height_canvas + 'px')
+
+            this._ctx.drawImage(img, 0, 0)
+
+            var imageData = this._ctx.getImageData(0, 0, width_canvas, height_canvas)
+            var ret = jsqr(imageData.data, width_canvas, height_canvas)
+            
+            return ret
+        }
 
         async _setCamera() {
             var mediaDevices = util.getMediaDevices()
@@ -229,6 +209,7 @@
 
         _showFrame() {
             this._frame.style.display = 'block'
+            this._isHiding = false
         }
 
 
@@ -247,45 +228,28 @@
                 if(this._ctx === null) return
                 this._clearCapture()
 
-                this.isCapturing = true
-                while(this.isCapturing){
+                this._isCapturing = true
+                this._ctx.clearRect(0, 0, width_canvas, height_canvas)
+                while(this._isCapturing){
                     await util.sleep(500)
                     this._ctx.drawImage(this._display, 0, 0)
                     var imageData = this._ctx.getImageData(0, 0, width_canvas, height_canvas)
                     var ret = jsqr(imageData.data, width_canvas, height_canvas)
-                    console.log(new Date().getTime())
-                    console.log(ret)
                     if(ret !== null) return ret
                     // TODO: process image
                 }
-
-                // var captureLoop = () => {
-                //     this._timer_id = setTimeout(() => {
-                //         this._ctx.drawImage(this._display, 0, 0)
-                //         // TODO: process img
-
-                //         // try {
-                //         //     var img = this._ctx.getImageData(0, 0, width_canvas, height_canvas);
-                //         //     var res = qrcode.decodeFromImageData(img, width_canvas, height_canvas);
-                //         //     resolve(res);
-                //         // }
-                //         // catch (err) {
-                //         //     if (typeof err !== 'string') {
-                //         //         console.log(err);
-                //         //     }
-                //         //     captureLoop();
-                //         // }
-                //     }, 500)
-                // }
+                return null
         }
 
         _clearCapture() {
-            this.isCapturing = false
+            this._isCapturing = false
         }
+
         _hideFrame() {
             if (this._display !== null)
                 this._display.srcObject = null
             this._frame.style.display = 'none'
+            this._isHiding = true
         }
     }
 
@@ -294,9 +258,4 @@
     QRreader.prototype.CONSTRAINTS_CAMERA_BACK  = { video: { facingMode: 'environment' }, audio: false }
 
     window.qrReader = new QRreader()
-    // /** 判断当前上下文是否支持MediaDevices接口 */
-    // QRreader.prototype.isSupported = function () {
-    //     return isNotNil(this.getMediaDevices())
-    // }
-
 })()
