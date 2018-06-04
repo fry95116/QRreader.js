@@ -134,6 +134,7 @@
                         return
                     }
 
+                    var isCancel = this._isHiding
                     this._clearCapture()
                     this._hideFrame()
 
@@ -141,7 +142,7 @@
                     else ret = null
 
                     await util.sleep(10)
-                    if(onDetected) onDetected(ret)
+                    if(!isCancel && onDetected) onDetected(ret)
                 }
                 el.onclick = function(){
                     doOnClick()
