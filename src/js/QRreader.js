@@ -1,150 +1,88 @@
+(function () {
 
+    const util = require('./util.js')
+    const jsqr = require('jsqr')
+    // $.fn.QRreader = function(option, onMsg){
 
-(function ($) {
-    /** 检查`test`是否不为undefined或者null */
-    function isNotNil(test) {
-        return !(test == null)
-        // return typeof (test) !== 'undefined' || test !== null
-    }
-
-    function waitUntil(condition, timeout){
-        timeout = timeout || -1
-        var startTime =  new Date().getTime()
-        return new Promise(function(resolve, reject){
-            function waitLoop(){
-                setTimeout(function(){
-                    if(timeout > 0 && new Date().getTime() - startTime > timeout) reject(new Error('time out'))
-                    else if(condition()) resolve()
-                    else waitLoop()
-                }, 100)
-            }
-
-            waitLoop()
-        })
-    }
-    /** 获取MediaDevices接口，如果不支持则返回null */
-    function getMediaDevices () {
-		var res = null
-		
-        if (isNotNil(navigator)) {
-            if (isNotNil(navigator.mediaDevices) && isMediaDevices(navigator.mediaDevices)) {
-                res = navigator.mediaDevices
-            }
-            else if (isMediaDevices(navigator)) {
-                res = navigator
-            }
-            else if (isNotNil(navigator.webkitEnumerateDevices) && isNotNil(navigator.webkitGetUserMedia)) {
-                navigator.enumerateDevices = navigator.webkitEnumerateDevices
-                navigator.getUserMedia = navigator.webkitGetUserMedia
-                res = navigator
-            }
-        }
-
-        else if (isNotNil(MediaDevices) && isMediaDevices(MediaDevices)) {
-            res = MediaDevices
-		}
-        return res
-    }
-
-    window.getMediaDevices = getMediaDevices
-
-    /** 检查`test`是否实现的MediaDevices接口 */
-    function isMediaDevices (test) {
-        return isNotNil(test.getUserMedia)
-    }
-
-    function decodeFromFile(file){
-        return new Promise((resolve, reject)=>{
-            var reader = new FileReader()
-            reader.onload = function(e) {
-                try{
-                    qrcode.decode(e.target.result);
-                    qrcode.callback = resolve
-                }
-                catch(err){
-                    reject(err)
-                }
-            }
-            reader.readAsDataURL(file);	
-        })
-    }
-
-    $.fn.QRreader = function(option, onMsg){
-
-        var opt = {
-            switchDevice: true,
-            readFromAlbum: true,
-            onDetected: null
-        }
+    //     var opt = {
+    //         switchDevice: true,
+    //         readFromAlbum: true,
+    //         onDetected: null
+    //     }
         
-        option = $.extend({}, opt, option)
-        if(getMediaDevices() !== null){
-            var reader = new QRreader(option)
+    //     option = $.extend({}, opt, option)
+    //     if(getMediaDevices() !== null){
+    //         var reader = new QRreader(option)
 
-            this.each(function(){
-                if(this.tagName.toUpperCase() !== 'LABEL'){
-                    console.log('please load this plugin on <label> element.')
-                    return
-                }
-                $(this).click(()=>{
-                    reader._setCamera()
-                        .then(()=>reader._showFrame())
-                        .then(()=>reader._startCapture())
-                        .then((res)=>{
-                            reader._clearCapture()
-                            reader._hideFrame()
-                            if(option.onDetected) option.onDetected(res)
-                        })
-                        .catch((err)=>{
-                            console.log('Error occured: ' + err.message)
-                        })
-                })
-            })
-        }
-        else{
-            this.each(function(){
-                if(this.tagName.toUpperCase() !== 'LABEL'){
-                    console.log('please load this plugin on <label> element.')
-                    return
-                }
-                this.setAttribute('for', 'QRreader-file-input')
-                var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*" multiple>')
-                $file_input.change(function(){
-                    if(this.files.length === 0) return
-                    decodeFromFile(this.files[0])
-                    .then((res)=>{
-                        if(option.onDetected) option.onDetected(res)
-                    })
-                    .catch(()=>{
-                        console.log('Error occured: ' + err.message)
-                    })
-                })
-                $(this).after($file_input)
-            })
+    //         this.each(function(){
+    //             if(this.tagName.toUpperCase() !== 'LABEL'){
+    //                 console.log('please load this plugin on <label> element.')
+    //                 return
+    //             }
+    //             $(this).click(()=>{
+    //                 reader._setCamera()
+    //                     .then(()=>reader._showFrame())
+    //                     .then(()=>reader._startCapture())
+    //                     .then((res)=>{
+    //                         reader._clearCapture()
+    //                         reader._hideFrame()
+    //                         if(option.onDetected) option.onDetected(res)
+    //                     })
+    //                     .catch((err)=>{
+    //                         console.log('Error occured: ' + err.message)
+    //                     })
+    //             })
+    //         })
+    //     }
+    //     else{
+    //         this.each(function(){
+    //             if(this.tagName.toUpperCase() !== 'LABEL'){
+    //                 console.log('please load this plugin on <label> element.')
+    //                 return
+    //             }
+    //             this.setAttribute('for', 'QRreader-file-input')
+    //             var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*" multiple>')
+    //             $file_input.change(function(){
+    //                 if(this.files.length === 0) return
+    //                 decodeFromFile(this.files[0])
+    //                 .then((res)=>{
+    //                     if(option.onDetected) option.onDetected(res)
+    //                 })
+    //                 .catch(()=>{
+    //                     console.log('Error occured: ' + err.message)
+    //                 })
+    //             })
+    //             $(this).after($file_input)
+    //         })
 
-        }
-    }
+    //     }
+    // }
 
-    function QRreader(opt) {
+    class QRreader {
+        constructor(opt) {
+            
+            this._isFront = false;
+            this._stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * 0.618);
+            this._frame = null;  // 
+            this._display = null;
+            this._canvas = null;
+            this._ctx = null;
 
-        this._frame = null
-        this._display = null
-        this._isFront = false
-        this._stride = Math.round(Math.min(window.innerHeight, window.innerWidth) * 0.618)
-        this._ctx = null
-        this._timer_id = -1
+            // this._timer_id = -1;
+            this.isCapturing = false;
+            this.switchDevice = true;
+            this.readFromAlbum = true;
 
-        this.switchDevice = true
-        this.readFromAlbum = true
-        if(typeof opt.switchDevice !== 'undefined')
-            this.switchDevice = opt.switchDevice
-        if(typeof opt.readFromAlbum !== 'undefined')
-            this.readFromAlbum = opt.readFromAlbum
+            if (typeof opt !== 'undefined'){
+                if (typeof opt.switchDevice !== 'undefined')
+                    this.switchDevice = opt.switchDevice;
+                if (typeof opt.readFromAlbum !== 'undefined')
+                    this.readFromAlbum = opt.readFromAlbum;
+            }
 
-        var template = ''
-            + '<div class="QRreader-mask" style="display: none;">'
+            var template = ''
                 + '<video autoplay="autoplay" muted="muted" playsinline></video>'
-                + '<canvas id="canvas" style="display:none;"></canvas>'
+                + '<canvas id="canvas" style="display:none"></canvas>'
                 + '<div class="content-center">'
                     + '<div class="aperture">'
                         + '<div class="scan-line"></div>'
@@ -156,126 +94,209 @@
                     + '<div class="tips">将二维码放入取景框中</div>'
                 + '</div>'
                 + '<button class="btn btn-cancel">&lt; 返回</button>'
-            + '</div>'
 
-        this._frame = $(template)
-        this._display = $('video', this._frame)
+            this._frame = document.createElement('div')
+            this._frame.className = 'QRreader-mask'
+            this._frame.style.display = 'none'
+            this._frame.innerHTML = template
 
-        this._ctx = $('canvas', this._frame)[0].getContext('2d')
+            this._display = this._frame.getElementsByTagName('video')[0] || null
+            this._canvas = this._frame.getElementsByTagName('canvas')[0]
+            this._ctx = this._canvas.getContext('2d');
 
-        $('.aperture', this._frame).width(this._stride).height(this._stride)
+            var aperture = this._frame.getElementsByClassName('aperture')[0]
+            aperture.style.width = this._stride + 'px'
+            aperture.style.height = this._stride + 'px'
 
-        if(this.switchDevice){
-            var $btn_switch = $('<button class="btn btn-switch">切换设备</button>')
-            $btn_switch.click(()=>{
-                this._isFront = !this._isFront
-                this._setCamera(this._isFront)
+            if (this.switchDevice) {
+                var btn_switch = document.createElement('button')
+                btn_switch.className = 'btn btn-switch'
+                btn_switch.innerText = '切换设备'
+                btn_switch.addEventListener('click', ()=>{
+                    this._isFront = !this._isFront
+                    this._setCamera(this._isFront)
+                })
+                this._frame.appendChild(btn_switch)
+            }
+            
+            if (this.readFromAlbum) {
+                var btn_album = document.createElement('label')
+                btn_album.className = 'btn btn-album'
+                btn_album.setAttribute('for', 'QRreader-file-input')
+                btn_album.innerText = '相册'
+                this._frame.appendChild(btn_album)
+            }
+
+            this._frame.getElementsByClassName('btn-cancel')[0].addEventListener('click', ()=>{
+                this._clearCapture()
+                this._hideFrame()
             })
-            this._frame.append($btn_switch)
-        }
-        if(this.readFromAlbum){
-            var $btn_switch = $('<label class="btn btn-album" for="QRreader-file-input">相册</label>')
-            var $file_input = $('<input id="QRreader-file-input" type="file" accept="image/*" capture="camera">')
-            this._frame.append($btn_switch)
-            this._frame.append($file_input)
+
+            document.body.appendChild(this._frame)
+            
+            var file_input = document.createElement('input')
+            file_input.setAttribute('id', 'QRreader-file-input')
+            file_input.setAttribute('type', 'file')
+            file_input.setAttribute('accept', 'image/*')
+            file_input.setAttribute('capture', 'camera')
+            //TODO: set change event
+            document.body.appendChild(file_input)
         }
 
-        $('.btn-cancel', this._frame).click(()=>{
-            this._clearCapture()
-            this._hideFrame()
-        })
+        hook(el, onDetected){
+            if(el.tagName.toUpperCase() !== 'LABEL'){
+                throw new Error('must be hooked on a <label> element!')
+                return
+            }
+            el.setAttribute('for', 'QRreader-file-input')
+            if(util.getMediaDevices() !== null){
 
-        $('body').append(this._frame)
+                var ret = null
+                var doOnClick = async ()=>{
+                    try{
+                        await this._setCamera()
+                        this._showFrame()
+                        ret = await this._startCapture()
+                    }
+                    catch(err){
+                        console.log(err)
+                    }
+                    this._clearCapture()
+                    this._hideFrame()
+
+                    var ret = ret.data || null
+                    await util.sleep(10)
+                    if(onDetected) onDetected(ret)
+                }
+                el.onclick = function(){
+                    doOnClick()
+                    return false;
+                }
+                // el.addEventListener('click', ()=>{
+                //     // (async ()=>{
+                //     //     await this._setCamera()
+                //     //     this._showFrame()
+                //     //     var ret = await this._startCapture()
+                //     //     this._clearCapture()
+                //     //     this._hideFrame()
+                //     //     if(onDetected) onDetected(ret)
+                //     // })()
+                //     alert('onClick')
+                //     return false
+                // })
+            }
+        }
+        // _setCamera() {
+        //     return new Promise(async (resolve, reject) => {
+        //         var mediaDevices = util.getMediaDevices()
+        //         if (mediaDevices === null)
+        //             reject('mediaDevices API not supported')
+        //         else {
+        //             var constraints = this.CONSTRAINTS_DEFAULT
+        //             if (this.switchDevice) {
+        //                 constraints = this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK
+        //             }
+        //             try{
+        //                 var stream = await mediaDevices.getUserMedia(constraints)
+        //                 this._display.srcObject = stream
+        //                 resolve()
+        //             }
+        //             catch(err){
+        //                 reject(err)
+        //             }
+        //         }
+        //     });
+        // }
+
+
+        async _setCamera() {
+            var mediaDevices = util.getMediaDevices()
+            if (mediaDevices === null)
+                reject('mediaDevices API not supported')
+            else {
+                var constraints = this.CONSTRAINTS_DEFAULT
+                if (this.switchDevice) {
+                    constraints = this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK
+                }
+                try{
+                    var stream = await mediaDevices.getUserMedia(constraints)
+                    this._display.srcObject = stream
+                    return
+                }
+                catch(err) {throw err}
+            }
+        }
+
+        _showFrame() {
+            this._frame.style.display = 'block'
+        }
+
+
+        async _startCapture() {
+                await util.waitUntil(() => {
+                    return this._display.videoWidth !== 0 
+                        && this._display.videoHeight !== 0;
+                }, 2000)
+                // may be throw timeout error 
+                var width_canvas = this._display.videoWidth
+                var height_canvas = this._display.videoHeight
+
+                this._canvas.setAttribute('width', width_canvas + 'px')
+                this._canvas.setAttribute('height', height_canvas + 'px')
+
+                if(this._ctx === null) return
+                this._clearCapture()
+
+                this.isCapturing = true
+                while(this.isCapturing){
+                    await util.sleep(500)
+                    this._ctx.drawImage(this._display, 0, 0)
+                    var imageData = this._ctx.getImageData(0, 0, width_canvas, height_canvas)
+                    var ret = jsqr(imageData.data, width_canvas, height_canvas)
+                    console.log(new Date().getTime())
+                    console.log(ret)
+                    if(ret !== null) return ret
+                    // TODO: process image
+                }
+
+                // var captureLoop = () => {
+                //     this._timer_id = setTimeout(() => {
+                //         this._ctx.drawImage(this._display, 0, 0)
+                //         // TODO: process img
+
+                //         // try {
+                //         //     var img = this._ctx.getImageData(0, 0, width_canvas, height_canvas);
+                //         //     var res = qrcode.decodeFromImageData(img, width_canvas, height_canvas);
+                //         //     resolve(res);
+                //         // }
+                //         // catch (err) {
+                //         //     if (typeof err !== 'string') {
+                //         //         console.log(err);
+                //         //     }
+                //         //     captureLoop();
+                //         // }
+                //     }, 500)
+                // }
+        }
+
+        _clearCapture() {
+            this.isCapturing = false
+        }
+        _hideFrame() {
+            if (this._display !== null)
+                this._display.srcObject = null
+            this._frame.style.display = 'none'
+        }
     }
 
     QRreader.prototype.CONSTRAINTS_DEFAULT      = { video: true, audio: false }
     QRreader.prototype.CONSTRAINTS_CAMERA_FRONT = { video: { facingMode: 'user' }, audio: false }
     QRreader.prototype.CONSTRAINTS_CAMERA_BACK  = { video: { facingMode: 'environment' }, audio: false }
 
-    QRreader.prototype._setCamera = function(){
-        return new Promise((resolve, reject)=>{
-            var mediaDevices = getMediaDevices()
-            if (mediaDevices === null) 
-                reject('mediaDevices API not supported')
-            else{
-                var constraints = this.CONSTRAINTS_DEFAULT
-                if(this.switchDevice){
-                    constraints = this._isFront ? this.CONSTRAINTS_CAMERA_FRONT : this.CONSTRAINTS_CAMERA_BACK
-                }
-
-                mediaDevices.getUserMedia(constraints)
-                .then((stream)=>{
-                    this._display[0].srcObject = stream
-                    resolve()
-                })
-                .catch(reject)
-            }
-        })
-    }
-
-    QRreader.prototype._showFrame = function(){
-        return new Promise((resolve, reject)=>{
-            this._frame.show()
-            resolve();
-        })
-    }
- 
-    QRreader.prototype._startCapture = function(){
-        return new Promise((resolve, reject)=>{
-            waitUntil(()=> {
-                return this._display[0].videoWidth !== 0 && this._display[0].videoHeight !== 0
-            })
-            .then(()=>{
-                $('canvas', this._frame).attr({
-                    'width': this._display[0].videoWidth + 'px',
-                    'height': this._display[0].videoHeight + 'px'
-                })
-                
-                if(this._ctx === null) return
-
-                this._clearCapture()
-                
-                var width_canvas = $('canvas', this._frame).width()
-                var height_canvas = $('canvas', this._frame).height()
-
-                var captureLoop = ()=>{
-                    this._timer_id = setTimeout(()=>{
-                        this._ctx.drawImage(this._display[0], 0, 0)
-                        try{
-                            var img = this._ctx.getImageData(0, 0, width_canvas, height_canvas)
-                            var res = qrcode.decodeFromImageData(img, width_canvas, height_canvas)
-                            resolve(res)
-                        }
-                        catch(err){
-                            if(typeof err !== 'string'){
-                                console.log(err)
-                            }
-                            captureLoop()
-                        }
-                    }, 500)
-                }
-                captureLoop()
-            })
-            .catch((err)=>console.log(err))
-        })
-    }
-
-    QRreader.prototype._clearCapture = function(){
-        if(this._timer_id != -1){
-            clearInterval(this._timer_id)
-            this._timer_id = -1
-        }
-    }
-    
-    QRreader.prototype._hideFrame = function () {
-        if(this._display[0] !== null)
-            this._display[0].srcObject = null
-        this._frame[0].style.display= 'none'
-    }
-
+    window.qrReader = new QRreader()
     // /** 判断当前上下文是否支持MediaDevices接口 */
     // QRreader.prototype.isSupported = function () {
     //     return isNotNil(this.getMediaDevices())
     // }
 
-})(jQuery)
+})()
